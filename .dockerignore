@@ -1,0 +1,27 @@
+# Ignore Python cache and virtual envs
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+env/
+venv/
+ENV/
+
+# Ignore git
+.git
+.gitignore
+
+# Ignore local files
+.DS_Store
+*.sqlite3
+*.db
+*.log
+.env
+
+# Ignore editor and IDE files
+.vscode/
+.idea/
+
+# Dockerfile and docker-compose overrides
+docker-compose.override.yml
