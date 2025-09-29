@@ -48,7 +48,7 @@ The project was built as part of an **SRE skills challenge** to showcase AWS flu
 
 ## 💰 Cost Considerations
 For this Flask application, **AWS App Runner** is the most cost-effective option:
-- It charges only for the **vCPU and memory used per second**, with no idle charges.  
+- As it charges only for the **vCPU and memory used per second**, with no idle charges.  
 - **EC2** would bill for full instance uptime, even when traffic is low.  
 - **ECS on EC2** still requires paying for underlying instances.  
 - **EKS** introduces extra **control plane costs** in addition to worker nodes.  
