@@ -10,7 +10,7 @@ The project was built as part of an **SRE skills challenge** to showcase AWS flu
 ## ✅ Current Deployment
 
 ### 🔹 Application Hosting
-- Application containerized using **multi-stage Docker build** with a **distroless image** → resulting in a **lightweight, secure, and fast** container.  
+- Application containerized using **multi-stage Docker build** with a **distroless image** which results in a **lightweight, secure, and fast** container.  
 - Port changed from **5000 → 8080** for compatibility with App Runner.  
 - Image stored in **Amazon ECR**.  
 - Deployed via **AWS App Runner** for:
@@ -19,7 +19,7 @@ The project was built as part of an **SRE skills challenge** to showcase AWS flu
   - **High availability** with no infrastructure management  
 
 ### 🔹 Security
-- **AWS WAF** created using a **CloudFormation template**.  
+- Created **AWS WAF** using a **CloudFormation template**.  
 - **AWS WAF** integrated with App Runner to protect against common web exploits (SQLi, XSS, bots)  
 -  App Runner has  **TLS/HTTPS by default** so, we can have application with best security as it covers TLS as well.
 
@@ -29,9 +29,9 @@ The project was built as part of an **SRE skills challenge** to showcase AWS flu
   - CPU utilization
   - Memory utilization
   - requests count
-  - latnecy requests
+  - latency requests
   - 4xx errors
-  - 5xx errors (added intentionally since application initially produced 5xx errors → metric/alarms now track them for early detection)  
+  - 5xx errors - Intially when the app runner is ready. There are no 5xx related erros. so I myself created reated a crash route (/crash) to generate 500 errors, so that CloudWatch allows     me to create the metric and  alarms. 
 - **CloudWatch Alarms** set up to trigger notifications for abnormal CPU, memory, and error spikes.  
 
 ---
@@ -44,11 +44,9 @@ The project was built as part of an **SRE skills challenge** to showcase AWS flu
 
 ---
 
----
-
 ## 💰 Cost Considerations
 For this Flask application, **AWS App Runner** is the most cost-effective option:
-- As it charges only for the **vCPU and memory used per second**, with no idle charges.  
+- As it charges only for the **vCPU and memory used per second**, with no idle charges.
 - **EC2** would bill for full instance uptime, even when traffic is low.  
 - **ECS on EC2** still requires paying for underlying instances.  
 - **EKS** introduces extra **control plane costs** in addition to worker nodes.  
@@ -61,9 +59,8 @@ For this Flask application, **AWS App Runner** is the most cost-effective option
 - **Built-in HTTPS, high availability, and autoscaling** with no cluster management  
 - **Fully managed** → no servers, patching, or orchestration overhead  
 - **Cost-efficient** for small apps with variable traffic  
-- **Faster deployment** → where we can focus on monitoring, security, caching the application, automating further deployments using ci/cd. 
+- **Faster deployment** → where we can focus on monitoring, security, focusing on caching and performance., automating further deployments using CI/CD. 
 - **Best fit** for this lightweight Flask application compared to ECS, EKS, or EC2  
-
 
 ## 🌐 Public URL
 👉 [App Runner Service URL](https://gd7rq432nc.us-east-1.awsapprunner.com/) 
@@ -81,47 +78,59 @@ For this Flask application, **AWS App Runner** is the most cost-effective option
 ---
 
 ## 🚦 Next Steps / Future Improvements
-If working with an SRE team, the following would be added to improve the system further:  
+If I'm working with an SRE team, the following would be added to improve the system further:  
+
+## Performing Infrastructure/Application level deployments with complete automation.
 
 ### Infrastructure as Code (IaC)
 - Use **Terraform** to manage:
-  - App Runner Service & ECR  
-  - AWS WAF rules (including optional rate limiting)  
-  - CloudWatch dashboards & alarms  
-  - Budgets & IAM roles
-  - creating dbs, moving the application to EKS if the appliaction size increases
-  - configuring the applicaton atmost security with vpc, WAF, KMS, IAM
-  - creating prod and non prod environments to isolate the environements and easy for developers for pushing and testing the code
+  - Creating entire Infrastructure using **Terraform**.
+  - Using modules, workspaces to create secure infrstructure with prod and non prod environments.
+  - Creating Statefile in S3 with dynamoDB as backend and Hashicorp Vault for using storing the passwords, securing the API keys and IAM keys and etc.
+  - If required we can also use **Ansible** to maanage the virtual machines.
 
-### CI/CD Pipeline
-- performing automate deployments using terraform in infrastructure level for **DEV** and **QA** approval deploment to **UAT** and with release planning and after client approval for **PROD** 
--  for **Application** deployments also using Jenkins, Github Actions and ArgoCD. Integrating with testings, performing code scanning, testing and vunerability scanning code and for containers.
+### CI/CD Pipelines
+- performing automate deployments using terraform in infrastructure level for **DEV** and **QA** approval deployment to **UAT** and with release planning and after client approval for **PROD** 
+-  for **Application** deployments also using Jenkins, Github Actions and ArgoCD. Integrating with testings, performing code scanning, testing and vulnerability scanning code and for containers.
 -  using scripting in automation for updates, cronjobs, script automations.
 
-### Secrets & Config Management
-- Store sensitive values (DB credentials, API keys) in **AWS Secrets Manager** or **SSM Parameter Store**  or **Hashicorp Vault** 
-
-### Caching
-- Integrating **Route 53 + Cloudfront** for caching with less latency for the application. If production level increases more then going higher content delivery networks as **Akamai**, **Cloudfare**. 
-- 
+**Deployment Strategies**
+- Implement Blue/Green deployments to reduce downtime and risk by running two environments in parallel and switching traffic only after the new version is validated.
+- Use Canary deployments to roll out changes gradually to a small percentage of users first, monitor performance, then scale up to all users if stable.
+- Introduce Automated Rollbacks so that if errors or latency increase after a release, traffic automatically reverts to the previous stable version.
+   
 ### Advanced Monitoring
 - Extend monitoring with **CloudWatch Logs Insights** or external tools like **Datadog / ELK**
 - Setting up proper monitoring tools like Prometheus, Grafana, cloudwatch, Datadog, Dynatrace.
-- Define **SLOs/SLIs** and track error budgets  
+- Define **SLOs/SLIs** and track error budgets.
 
+### Security & Encryption
+- Managing sensitive data such as database credentials and API keys using AWS Secrets Manager or SSM Parameter Store, instead of hardcoding values or storing them in plain text.
+- Enable AWS KMS encryption for all data at rest (logs, backups, S3 objects, RDS databases) to meet compliance and protect sensitive information.
+- Ensure TLS/HTTPS is enforced for all traffic in and out of the application.
+- Use IAM roles with least privilege and rotate access keys regularly to minimize security risks.
+- Extend AWS WAF with advanced rules such as rate limiting, geo-blocking, and custom signatures to provide stronger protection against DDoS and targeted attacks.
+   
 ### Scaling & Performance
-- Fine-tune App Runner scaling policies  
-- Add **RDS** for persistent storage  
-- Add **ElastiCache (Redis)** for faster performance  
+- Using Auto Scaling with best algorithem which routers the traffic as per the traffic
+- Using RDS Database with multi region for high availability
+- Add **ElastiCache (Redis)** for RDS to get faster performance
+- Use Route 53 + CloudFront for caching and reducing application latency. For larger-scale production workloads, consider integrating advanced CDNs such as Akamai or Cloudflare to further improve global performance and reliability. 
 
----
+### Cost Optimization
+- Implementing serverless functions (AWS Lambda) which figure outs the resources which are not is use and eliminating them for cost optimization
+- Configure auto-scaling policies so resources scale down during low traffic periods.
+- If needed using Savings Plans or Reserved Instances for predictable workloads to lower long-term costs.
 
-## 📌 Assumptions
-- Application is lightweight, Flask-based with low-to-moderate traffic  
-- Required: secure (HTTPS + WAF), monitored, scalable, and within cost cap  
-- Focus was on **deploying quickly and securely** while optimizing for **cost efficiency**  
+### Incident Management
+- Creating an incident management process with runbooks, escalation paths, and on-call rotations so issues can be identified, communicated, and resolved quickly with minimal downtime.
 
----
+### Documentation & Knowledge Sharing
+- Creating a clear documentation about release plans, deployment processes, and architecture diagrams so new joiners can get up to speed quickly and the team follows a consistent approach.
+  
+### Disaster Recovery
+- Setting up automated backups and snapshots for critical resources like databases and application state, so the system can be quickly restored in case of failures.
+- Implementing multi-region deployment or failover strategies to keep the application available even if an AWS region goes down.
 
 ## 📊 References
 - [AWS App Runner](https://docs.aws.amazon.com/apprunner/)  
